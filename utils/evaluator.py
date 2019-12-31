@@ -375,8 +375,8 @@ def evaluate2view(coronal_model_path, axial_model_path, volumes_txt_file, data_d
     if type(device) == int:
         # if CUDA available, follow through, else warn and fallback to CPU
         if cuda_available:
-            model1 = torch.load(coronal_model_path)
-            model2 = torch.load(axial_model_path)
+            model1 = torch.load(coronal_model_path, map_location=torch.device('cuda:0'))
+            model2 = torch.load(axial_model_path, map_location=torch.device('cuda:0'))
             
             torch.cuda.empty_cache()
             model1.cuda(device)
