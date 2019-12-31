@@ -96,13 +96,7 @@ def evaluate_bulk(eval_bulk):
     prediction_path = eval_bulk['save_predictions_dir']
     volumes_txt_file = eval_bulk['volumes_txt_file']
     device = eval_bulk['device']
-    label_names = ["vol_ID", "Background", "Left WM", "Left Cortex", "Left Lateral ventricle", "Left Inf LatVentricle",
-                   "Left Cerebellum WM", "Left Cerebellum Cortex", "Left Thalamus", "Left Caudate", "Left Putamen",
-                   "Left Pallidum", "3rd Ventricle", "4th Ventricle", "Brain Stem", "Left Hippocampus", "Left Amygdala",
-                   "CSF (Cranial)", "Left Accumbens", "Left Ventral DC", "Right WM", "Right Cortex",
-                   "Right Lateral Ventricle", "Right Inf LatVentricle", "Right Cerebellum WM",
-                   "Right Cerebellum Cortex", "Right Thalamus", "Right Caudate", "Right Putamen", "Right Pallidum",
-                   "Right Hippocampus", "Right Amygdala", "Right Accumbens", "Right Ventral DC"]
+    label_names = ["vol_ID"] + eval_bulk['labels']
     batch_size = eval_bulk['batch_size']
     need_unc = eval_bulk['estimate_uncertainty']
     mc_samples = eval_bulk['mc_samples']
@@ -143,13 +137,7 @@ def evaluate_bulk(eval_bulk):
 
 def compute_vol(eval_bulk):
     prediction_path = eval_bulk['save_predictions_dir']
-    label_names = ["vol_ID", "Background", "Left WM", "Left Cortex", "Left Lateral ventricle", "Left Inf LatVentricle",
-                   "Left Cerebellum WM", "Left Cerebellum Cortex", "Left Thalamus", "Left Caudate", "Left Putamen",
-                   "Left Pallidum", "3rd Ventricle", "4th Ventricle", "Brain Stem", "Left Hippocampus", "Left Amygdala",
-                   "CSF (Cranial)", "Left Accumbens", "Left Ventral DC", "Right WM", "Right Cortex",
-                   "Right Lateral Ventricle", "Right Inf LatVentricle", "Right Cerebellum WM",
-                   "Right Cerebellum Cortex", "Right Thalamus", "Right Caudate", "Right Putamen", "Right Pallidum",
-                   "Right Hippocampus", "Right Amygdala", "Right Accumbens", "Right Ventral DC"]
+    label_names = ["vol_ID"] + eval_bulk['labels']
     volumes_txt_file = eval_bulk['volumes_txt_file']
 
     eu.compute_vol_bulk(prediction_path, "Linear", label_names, volumes_txt_file)
