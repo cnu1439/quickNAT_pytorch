@@ -7,6 +7,7 @@ import torch
 import torch.utils.data as data
 from torchvision import transforms
 import utils.preprocessor as preprocessor
+from augmentations import adni_qnat_aug
 
 
 # transform_train = transforms.Compose([
@@ -17,7 +18,7 @@ import utils.preprocessor as preprocessor
 
 class ImdbData(data.Dataset):
     def __init__(self, X, y, w, transforms=None):
-        self.X = X if len(X.shape) == 4 else X[:, np.newaxis, :, :]
+        self.X = X
         self.y = y
         self.w = w
         self.transforms = transforms
@@ -26,6 +27,13 @@ class ImdbData(data.Dataset):
         img = torch.from_numpy(self.X[index])
         label = torch.from_numpy(self.y[index])
         weight = torch.from_numpy(self.w[index])
+
+        if not self.transforms is None:
+            data = {'image':img, 'mask':label, 'weight':weight}
+            augmented = self.transforms(**data)
+            img , label, weight = augmented['image'], augmented['mask'], augmented['weight']
+
+        img = img if len(img.shape) == 3 else img[np.newaxis, :, :]
         return img, label, weight
 
     def __len__(self):
@@ -43,7 +51,8 @@ def get_imdb_dataset(data_params):
     class_weight_test = h5py.File(os.path.join(data_params['data_dir'], data_params['test_class_weights_file']), 'r')
     weight_test = h5py.File(os.path.join(data_params['data_dir'], data_params['test_weights_file']), 'r')
 
-    return (ImdbData(data_train['data'][()], label_train['label'][()], class_weight_train['class_weights'][()]),
+    transforms_train = adni_qnat_aug(prob=0.6, additional_targets={'weight': 'mask'})
+    return (ImdbData(data_train['data'][()], label_train['label'][()], class_weight_train['class_weights'][()], transforms_train),
             ImdbData(data_test['data'][()], label_test['label'][()], class_weight_test['class_weights'][()]))
 
 
@@ -181,7 +190,8 @@ def load_file_paths(data_dir, label_dir, data_id, volumes_txt_file=None):
             vol in volumes_to_use]
     elif data_id == "ADNI":
         file_paths = [
-            [os.path.join(data_dir, vol, 'orig.mgz'), os.path.join(label_dir, vol, 'Lab_con.mgz')]
+            #[os.path.join(data_dir, vol, 'orig.mgz'), os.path.join(label_dir, vol, 'Lab_con.mgz')]
+            [os.path.join(data_dir, vol, '.nii.gz'), os.path.join(label_dir, vol, '.nii.gz')]
             for
             vol in volumes_to_use]
     elif data_id == "CANDI":
@@ -213,6 +223,7 @@ def load_file_paths_eval(data_dir, volumes_txt_file, dir_struct):
 
     with open(volumes_txt_file) as file_handle:
         volumes_to_use = file_handle.read().splitlines()
+
     if dir_struct == "FS":
         file_paths = [
             [os.path.join(data_dir, vol, 'mri/orig.mgz')]
@@ -221,6 +232,11 @@ def load_file_paths_eval(data_dir, volumes_txt_file, dir_struct):
     elif dir_struct == "Linear":
         file_paths = [
             [os.path.join(data_dir, vol)]
+            for
+            vol in volumes_to_use]
+    elif dir_struct == "ADNI":
+        file_paths = [
+            [os.path.join(data_dir, vol, '.nii.gz')]
             for
             vol in volumes_to_use]
     elif dir_struct == "part_FS":
