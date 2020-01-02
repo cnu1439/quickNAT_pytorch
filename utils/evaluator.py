@@ -101,6 +101,14 @@ def evaluate_dice_score(model_path, num_classes, data_dir, label_dir, volumes_tx
     with open(volumes_txt_file) as file_handle:
         volumes_to_use = file_handle.read().splitlines()
 
+    model = torch.load(model_path, map_location=torch.device('cpu'))
+    cuda_available = torch.cuda.is_available()
+
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPUs!")
+        # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+        model = torch.nn.DataParallel(model)
+
     cuda_available = torch.cuda.is_available()
     # First, are we attempting to run on a GPU?
     if type(device) == int:
@@ -377,6 +385,12 @@ def evaluate2view(coronal_model_path, axial_model_path, volumes_txt_file, data_d
         if cuda_available:
             model1 = torch.load(coronal_model_path, map_location=torch.device('cuda:0'))
             model2 = torch.load(axial_model_path, map_location=torch.device('cuda:0'))
+
+            if torch.cuda.device_count() > 1:
+                print("Let's use", torch.cuda.device_count(), "GPUs!")
+                # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+                model1 = torch.nn.DataParallel(model1)
+                model2 = torch.nn.DataParallel(model2)
             
             torch.cuda.empty_cache()
             model1.cuda(device)

@@ -30,9 +30,18 @@ def train(train_params, common_params, data_params, net_params):
                                              num_workers=4, pin_memory=True)
 
     if train_params['use_pre_trained']:
-        quicknat_model = torch.load(train_params['pre_trained_path'])
+        quicknat_model = torch.load(train_params['pre_trained_path'], map_location=torch.device('cpu'))
+        for param in quicknat_model.parameters():
+            param.requires_grad = False
+
+        quicknat_model.classifier.conv = Conv2d(64, 15, kernel_size=(1, 1), stride=(1, 1))
     else:
         quicknat_model = QuickNat(net_params)
+
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPUs!")
+        # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+        quicknat_model = torch.nn.DataParallel(quicknat_model)
 
     solver = Solver(quicknat_model,
                     device=common_params['device'],
